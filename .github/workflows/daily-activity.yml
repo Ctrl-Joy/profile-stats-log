@@ -9,6 +9,12 @@ on:
     - cron: "37 12 * * *"
     - cron: "23 16 * * *"
     - cron: "49 20 * * *"
+  # Editing the schedule or the script starts a run straight away.
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/daily-activity.yml"
+      - "scripts/**"
   workflow_dispatch:
     inputs:
       commits:
