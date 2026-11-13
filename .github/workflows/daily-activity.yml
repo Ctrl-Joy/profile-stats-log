@@ -19,7 +19,7 @@ on:
     inputs:
       commits:
         description: "Commits to make in this run"
-        default: "3"
+        default: "5"
 
 # The token this job gets can write to THIS repository only.
 permissions:
@@ -34,8 +34,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
-      # Commits per run. 6 runs x 3 commits = 18 contributions a day.
-      COMMITS_PER_RUN: ${{ github.event.inputs.commits || '3' }}
+      # Commits per run. 6 runs x 5 commits = 30 contributions a day.
+      COMMITS_PER_RUN: ${{ github.event.inputs.commits || '5' }}
       OWNER: ${{ github.repository_owner }}
       GH_TOKEN: ${{ github.token }}
     steps:
