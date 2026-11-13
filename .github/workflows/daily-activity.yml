@@ -1,0 +1,56 @@
+name: Daily activity
+
+on:
+  schedule:
+    # Times are UTC. Six runs a day; GitHub may start them a few minutes late.
+    - cron: "17 1 * * *"
+    - cron: "43 5 * * *"
+    - cron: "11 9 * * *"
+    - cron: "37 12 * * *"
+    - cron: "23 16 * * *"
+    - cron: "49 20 * * *"
+  workflow_dispatch:
+    inputs:
+      commits:
+        description: "Commits to make in this run"
+        default: "3"
+
+# The token this job gets can write to THIS repository only.
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-activity
+  cancel-in-progress: false
+
+jobs:
+  commit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      # Commits per run. 6 runs x 3 commits = 18 contributions a day.
+      COMMITS_PER_RUN: ${{ github.event.inputs.commits || '3' }}
+      OWNER: ${{ github.repository_owner }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Commit as the repository owner
+        run: |
+          # Contributions only count when the commit email belongs to the account.
+          # The owner's GitHub no-reply address always does.
+          id=$(gh api "users/$OWNER" --jq .id)
+          git config user.name "$OWNER"
+          git config user.email "${id}+${OWNER}@users.noreply.github.com"
+
+      - name: Record snapshots
+        run: bash scripts/snapshot.sh "$COMMITS_PER_RUN"
+
+      - name: Push
+        run: |
+          for attempt in 1 2 3; do
+            git push && exit 0
+            git pull --rebase
+            sleep $((attempt * 5))
+          done
+          exit 1
